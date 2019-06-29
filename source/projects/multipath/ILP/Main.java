@@ -1,8 +1,17 @@
 package projects.multipath.ILP;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import com.opencsv.CSVReader;
 
 import projects.multipath.advanced.Graph;
 import projects.multipath.advanced.Path;
@@ -10,7 +19,7 @@ import projects.multipath.advanced.Problem;
 
 public class Main {
 
-	static String basePath = "D:/temp/data/dmrpp/"; 
+	static String basePath = "/tmp/data/dmrpp/"; 
 
 	public static void main(String argv[]) {
 		int option = (argv.length == 0)?1:Integer.parseInt(argv[0]);
@@ -50,7 +59,7 @@ public class Main {
 			Graph g = new Graph();
 			// Note that vertex ids must start from 0 and are consecutive. The resulting
 			// graph must be connected.
-			g.addVertex(0, new int[]{1});
+			g.addVertex(0, new int[]{1, 2});
 			g.addVertex(1, new int[]{0, 2, 3});
 			g.addVertex(2, new int[]{1});
 			g.addVertex(3, new int[]{1});
@@ -119,7 +128,41 @@ public class Main {
 			
 			// solveProblemSuboptimal(p, false, true, 0, 100, 2, false);
 			break;
-		}
+		case 7:
+			Graph gr = new Graph();
+			try {
+				List<String[]> values;
+				values = new CSVReader(new FileReader(argv[1])).readAll();
+				for (String[] strings : values) {
+					for (String s : strings)
+						if (!s.startsWith("#")) {
+							System.out.println(s);
+							Scanner sc = new Scanner(s);
+							int node = sc.nextInt();
+							List<Integer> neighbors = new ArrayList<Integer>();
+							while (sc.hasNext())
+								neighbors.add(sc.nextInt());
+							int[] neighbors_arr = neighbors.stream()
+		                            .mapToInt(Integer::intValue)
+		                            .toArray();
+							gr.addVertex(node, neighbors_arr);
+						}
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			gr.finishBuildingGraph();
+			p = new Problem();
+			p.graph = gr;
+			p.sg = new int[][]{{0, 4}, {4, 0}};
+			solveProblem(p, true, -1);
+			break;
+		}	
 	}
 	
 	
