@@ -159,7 +159,7 @@ public class Main {
 			gr.finishBuildingGraph();
 			p = new Problem();
 			p.graph = gr;
-			p.sg = new int[][]{{0, 4}, {4, 0}};
+			p.sg = new int[][]{{0, 4}, {3, 0}, {1, 2}};
 			solveProblem(p, true, -1);
 			break;
 		}	
