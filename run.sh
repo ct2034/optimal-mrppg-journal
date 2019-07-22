@@ -10,5 +10,5 @@ export PATH=/opt/gurobi811/linux64/bin/
   -Djava.library.path=${LD_LIBRARY_PATH} \
   -Dfile.encoding=UTF-8 \
   -classpath \
-    ./bin:${LD_LIBRARY_PATH}/gurobi.jar \
-  projects.multipath.ILP.Main
+    ./target/multipath.jar:${LD_LIBRARY_PATH}/gurobi.jar:./target/classes/lib/* \
+  projects.multipath.ILP.Main $@

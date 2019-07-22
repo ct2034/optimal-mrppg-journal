@@ -19,7 +19,7 @@ import projects.multipath.advanced.Problem;
 
 public class Main {
 
-	static String basePath = "/tmp/data/dmrpp/"; 
+	static String basePath = "/tmp/data/dmrpp/";
 
 	public static void main(String argv[]) {
 		int option = (argv.length == 0)?1:Integer.parseInt(argv[0]);
@@ -36,7 +36,7 @@ public class Main {
 			//run24x18PerformanceMetricTotalTime();
 			//run24x18PerformanceMetricTotalDistanceSplit();
 			run24x18PerformanceMetricTotalTimeFixedTime();
-			
+
 			//run24x18PerformanceMetricTotalDistanceSplitFixedTime();
 			break;
 		case 1:
@@ -55,22 +55,20 @@ public class Main {
 			solveProblem(p, true, 60);
 			break;
 		case 3:
-			System.out.println("Create a simple graph manually and then solve a problem on this graph.\n");
+			System.out.println("Is the graph considered directed?!.\n");
 			Graph g = new Graph();
 			// Note that vertex ids must start from 0 and are consecutive. The resulting
 			// graph must be connected.
-			g.addVertex(0, new int[]{1, 2});
-			g.addVertex(1, new int[]{0, 2, 3});
-			g.addVertex(2, new int[]{1});
-			g.addVertex(3, new int[]{1});
+			g.addVertex(0, new int[]{1});
+			g.addVertex(1, new int[]{2});
+			g.addVertex(2, new int[]{3});
+			g.addVertex(3, new int[]{0});
 			g.finishBuildingGraph();
-			System.out.println("Adjacency list:");
-			g.printGraphAsAdjacenyList();
-			System.out.println("\nSolving the problem, solution path set: ");
 			p = new Problem();
 			p.graph = g;
-			p.sg = new int[][]{{0, 3}, {3, 0}};
+			p.sg = new int[][]{{0, 1, 2, 3}, {3, 0, 1, 2}};
 			solveProblem(p, true, -1);
+			System.out.println("Looks like it ... ");
 			break;
 		case 4:
 			System.out.println("Solving problem from file: " + argv[1] + " with 1000 seconds limit.\n");
@@ -87,12 +85,12 @@ public class Main {
 			Graph t = new Graph();
 			int branches = 4;
 			int depth = 4;
-			
+
 			// Create root
 			int[] rootNeighbors = new int[branches];
 			for(int i = 0; i < branches; i ++){rootNeighbors[i] = i*depth + 1;}
 			t.addVertex(0, rootNeighbors);
-			
+
 			// Create branches
 			for(int i = 1; i <= branches; i ++){
 				for(int j = 0; j < depth; j ++)
@@ -100,7 +98,7 @@ public class Main {
 					int offset = (i-1) * depth;
 					if(j == depth -1){
 						// Only a single neighbor
-						t.addVertex(offset + j + 1, new int[]{offset + j});	
+						t.addVertex(offset + j + 1, new int[]{offset + j});
 					}
 					else{
 						t.addVertex(offset + j + 1, new int[]{j==0?0:offset + j, offset + j + 2});
@@ -109,26 +107,27 @@ public class Main {
 			}
 			t.finishBuildingGraph();
 			int[][] sg = Graph.getRandomStartGoalMany(t, 8);
-			
+
 			System.out.println("Adjacency list:");
 			t.printGraphAsAdjacenyList();
-			
+
 			p = new Problem();
 			p.graph = t;
 			p.sg = sg;
-			
+
 			//sg[0]= new int[]{1, 2, 3};
 			//sg[1]= new int[]{7, 8, 9};
 			//p.sg = sg;
 
 			PathPlanner.printStartAndGoals(p.graph, p.sg[0], p.sg[1]);
-			
+
 			System.out.println("\nSolving the problem, solution path set: ");
 			solveProblem(p, true, -1);
-			
+
 			// solveProblemSuboptimal(p, false, true, 0, 100, 2, false);
 			break;
 		case 7:
+			System.out.println("Solving problem from file: " + argv[1] + ".\n");
 			Graph gr = new Graph();
 			try {
 				List<String[]> values;
@@ -162,10 +161,10 @@ public class Main {
 			p.sg = new int[][]{{0, 4}, {3, 0}, {1, 2}};
 			solveProblem(p, true, -1);
 			break;
-		}	
+		}
 	}
-	
-	
+
+
 	/**
 	 * Solve a problem
 	 * @param p
@@ -202,7 +201,7 @@ public class Main {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Solve a problem
 	 * @param p
@@ -222,14 +221,14 @@ public class Main {
 				System.out.println("\nThere are " + cycles + " cycles in the result paths");
 			}
 			PathPlanner.printPaths(p.graph, paths);
-			
+
 			return new long[]{paths[0].length - 1, time, PathFinder.getTotalDistance(paths), makespanLb - 1};
 		}
 		else{
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Solve a problem
 	 * @param p
@@ -256,7 +255,7 @@ public class Main {
 	}
 
 	/**
-	 * Optimize for total time. 
+	 * Optimize for total time.
 	 * @param p
 	 * @param timeLimit
 	 * @return
@@ -273,7 +272,7 @@ public class Main {
 		paths = ms.planPathsAdvancedTT(p.graph, p.sg[0], p.sg[1], opt, gap, timeSteps, timeLimit);
 		time = System.currentTimeMillis() - time;
 		int ttLB = PathFinder.getTotalTimeLowerBound(p.graph, p.sg[0], p.sg[1]);
-		
+
 		if(paths != null){
 			int cycles = PathPlanner.hasCycles(paths);
 			if(cycles > 0){
@@ -285,9 +284,9 @@ public class Main {
 			return null;
 		}
 	}
-	
+
 	/**
-	 * Optimize for total time. 
+	 * Optimize for total time.
 	 * @param p
 	 * @param timeLimit
 	 * @return
@@ -303,7 +302,7 @@ public class Main {
 		paths = ms.planPathsAdvancedTD(p.graph, p.sg[0], p.sg[1], gap, timeSteps, timeLimit);
 		time = System.currentTimeMillis() - time;
 		int ttLB = PathFinder.getTotalTimeLowerBound(p.graph, p.sg[0], p.sg[1]);
-		
+
 		if(paths != null){
 			int cycles = PathPlanner.hasCycles(paths);
 			if(cycles > 0){
@@ -315,7 +314,7 @@ public class Main {
 			return null;
 		}
 	}
-	
+
 	private static long[] solveProblemDistanceSplit(Problem p, double gap, double timeLimit, int splits){
 		PathPlanner ms = new PathPlanner();
 		long time = System.currentTimeMillis();
@@ -323,7 +322,7 @@ public class Main {
 		int[][] paths = ms.planPathsAdvancedSplitDist(p.graph, p.sg[0], p.sg[1], gap, timeLimit, splits);
 		time = System.currentTimeMillis() - time;
 		int ttLB = PathFinder.getTotalTimeLowerBound(p.graph, p.sg[0], p.sg[1]);
-		
+
 		if(paths != null){
 			int cycles = PathPlanner.hasCycles(paths);
 			if(cycles > 0){
@@ -336,7 +335,7 @@ public class Main {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Solve a n^2 puzzle
 	 * @param p
@@ -357,7 +356,7 @@ public class Main {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Solve a problem without optimality guarantee, but fast
 	 * @param p
@@ -377,7 +376,7 @@ public class Main {
 			if(!PathPlanner.isPathSetValid(paths, p.graph, p.sg[0], p.sg[1])){
 				System.out.println("Path set is INVALID.");
 			}
-			
+
 			// Find out path lengths
 			long length = 0, leastPossibleLength = 0;
 			PathFinder.bHeuristic = false;
@@ -391,15 +390,15 @@ public class Main {
 					}
 				}
 			}
-			
-			return new long[]{paths[0].length, time, goalsReached, 
+
+			return new long[]{paths[0].length, time, goalsReached,
 					(goalsReached==p.sg[0].length)?length-1:0, (goalsReached==p.sg[0].length)?leastPossibleLength-1:0};
 		}
 		else{
 			return null;
 		}
 	}
-	
+
 	static String currentTest = null;
 	static double subTotal = 0;
 	static int pathLengths = 0;
@@ -411,7 +410,7 @@ public class Main {
 	static long expPathLength = 0;
 	static SortedSet<Double> finishingTimeSet = new TreeSet<Double>();
 	static int makeSpanTotal = 0;
-	
+
 	private static void resetStats(String test){
 		currentTest = test;
 		subTotal = 0;
@@ -419,9 +418,9 @@ public class Main {
 		solvedInstances = 0;
 		successCount = 0;
 		makeSpanTotal = 0;
-		finishingTimeSet = new TreeSet<Double>(); 
+		finishingTimeSet = new TreeSet<Double>();
 	}
-	
+
 	private static void resetHeuristicStats(String test){
 		currentTest = test;
 		goalsReached = 0;
@@ -431,9 +430,9 @@ public class Main {
 		successCount = 0;
 		pathLength = 0;
 		expPathLength = 0;
-		finishingTimeSet = new TreeSet<Double>(); 
+		finishingTimeSet = new TreeSet<Double>();
 	}
-	
+
 	private static void processStats(long[] stat){
 		if(stat != null){
 			int len = (int)stat[0];
@@ -448,7 +447,7 @@ public class Main {
 			System.out.println("Total time spent: " + totalTime + " seconds.\n");
 		}
 	}
-	
+
 	private static void processHeuristicStats(long[] stat, int n){
 		if(stat != null){
 			int len = (int)stat[0];
@@ -466,7 +465,7 @@ public class Main {
 			expPathLength += stat[4];
 		}
 	}
-	
+
 	private static void writeStats(){
 		try {
 			Double[] ft = finishingTimeSet.toArray(new Double[0]);
@@ -479,7 +478,7 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void writeHeuristicStats(){
 		try {
 			Double[] ft = finishingTimeSet.toArray(new Double[0]);
@@ -491,7 +490,7 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void writePuzzleStats(int instance, double time){
 		try {
 			String outString = "Instance: " + instance + ", time: " + time + "\n";
@@ -502,7 +501,7 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void writeString(String str){
 		try {
 			FileWriter fw = new FileWriter(basePath + "\\n2puzzle-result.txt", true);
@@ -512,7 +511,7 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void writePuzzleResult(int instance, double time, Graph g, int[][] paths){
 		try {
 			String outString = "Instance: " + (instance  + 1) + ", time: " + time/1000 + "\n";
@@ -525,7 +524,7 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
-	
+
 	protected static void runN2PuzzlePerformanceMetric(){
 		try{
 			totalTime = 0;
@@ -547,7 +546,7 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
-	
+
 	protected static void runCrowdedPerformanceMetric8x8(int from, int to, double timeLimit, int splitLevels, boolean noCycle){
 		totalTime = 0;
 		for(int a = from; a <= to; a = a + 10){
@@ -585,7 +584,7 @@ public class Main {
 		}
 		writeString("\n");
 	}
-	
+
 	protected static void run24x18PerformanceMetric(){
 		writeString("24 x 18 grid, exact\n");
 		totalTime = 0;
@@ -636,7 +635,7 @@ public class Main {
 			}
 		}
 	}
-	
+
 	protected static void run32x32PerformanceMetric(){
 		writeString("32 x 32 grid, 20% obstacles, exact\n");
 		totalTime = 0;
@@ -652,7 +651,7 @@ public class Main {
 		}
 
 		double timeLimit = 1800; boolean noCycle = true;
-		
+
 		writeString("32 x 32 grid, 20% obstacles, 2-way split\n");
 		totalTime = 0;
 		for(int n = 20; n <= 120; n = n + 20){
@@ -680,7 +679,7 @@ public class Main {
 			}
 			writeStats();
 		}
-		
+
 		writeString("32 x 32 grid, 20% obstacles, 8-way split\n");
 		totalTime = 0;
 		for(int n = 20; n <= 200; n = n + 20){
@@ -709,7 +708,7 @@ public class Main {
 			writeStats();
 		}
 	}
-	
+
 	protected static void run32x32PerformanceMetric8ConnectedAll(){
 		writeString("32 x 32 grid, 8 connected, 20% obstacles, exact\n");
 		totalTime = 0;
@@ -738,7 +737,7 @@ public class Main {
 			}
 			writeStats();
 		}
-		
+
 		writeString("32 x 32 grid, 8 connected, 20% obstacles, 4-way split\n");
 		totalTime = 0;
 		for(int a = 20; a <= 300; a = a + 20){
@@ -752,7 +751,7 @@ public class Main {
 			}
 			writeStats();
 		}
-		
+
 		writeString("32 x 32 grid, 8 connected, 20% obstacles, 8-way split\n");
 		totalTime = 0;
 		for(int a = 20; a <= 400; a = a + 20){
@@ -766,7 +765,7 @@ public class Main {
 			}
 			writeStats();
 		}
-		
+
 	}
 
 	protected static void runCrowdedPerformanceMetricCrowded(){
@@ -794,7 +793,7 @@ public class Main {
 			runCrowdedPerformanceMetric16x16(10, 250, 1800, k, true);
 		}
 	}
-	
+
 
 	/**
 	 * Total time algorithm evaluation
@@ -824,7 +823,7 @@ public class Main {
 			writeString("\n");
 		}
 	}
-	
+
 	/**
 	 * Total distance algorithm evaluation
 	 */
@@ -853,7 +852,7 @@ public class Main {
 			writeString("\n");
 		}
 	}
-	
+
 	/**
 	 * Total distance algorithm evaluation
 	 */
@@ -884,9 +883,9 @@ public class Main {
 			writeString("\n");
 		}
 	}
-	
+
 	/**
-	 * Fixing time and evaluate solution optimality, total time 
+	 * Fixing time and evaluate solution optimality, total time
 	 */
 	protected static void run24x18PerformanceMetricTotalTimeFixedTime(){
 		MultiagentGraphSolverGurobiTotalTime.bReturnAnySolution = true;
@@ -915,9 +914,9 @@ public class Main {
 		}
 		MultiagentGraphSolverGurobiTotalTime.bReturnAnySolution = false;
 	}
-	
+
 	/**
-	 * Fixing time and evaluate solution optimality, total distance 
+	 * Fixing time and evaluate solution optimality, total distance
 	 */
 	protected static void run24x18PerformanceMetricTotalDistanceSplitFixedTime(){
 		MultiagentGraphSolverGurobiDistance.bReturnAnySolution = true;
@@ -946,27 +945,27 @@ public class Main {
 		}
 		MultiagentGraphSolverGurobiDistance.bReturnAnySolution = false;
 	}
-	
-	
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	// Previous stuff - not very relevant now...
-	
+
 
 	protected static void run32x32PerformanceMetricSplitting(int from, int to, int spacing, double timeLimit, int splitLevels, boolean noCycle){
 		totalTime = 0;
@@ -982,7 +981,7 @@ public class Main {
 			writeStats();
 		}
 	}
-	
+
 	protected static void run32x32PerformanceMetric8Connected(){
 		totalTime = 0;
 		for(int a = 10; a <= 60; a = a + 10){
@@ -1014,7 +1013,7 @@ public class Main {
 			writeHeuristicStats();
 		}
 	}
-	
+
 	protected static void run32x32PerformanceMetricSplitting8Connected(int from, int to, double timeLimit, int splitLevels, boolean noCycle){
 		totalTime = 0;
 		for(int n = from; n <= to; n = n + 25){
@@ -1036,46 +1035,46 @@ public class Main {
 		runCrowdedPerformanceMetric8x8(10, 50, 3600, 0, false);
 		runCrowdedPerformanceMetric16x16(10, 70, 3600, 0, false);
 		run32x32PerformanceMetric();
-		
+
 		// 2 - split, cycle
 		writeString("2 - splitting\n");
 		runCrowdedPerformanceMetric8x8(10, 60, 3600, 1, false);
 		runCrowdedPerformanceMetric16x16(10, 120, 3600, 1, false);
 		run32x32PerformanceMetricSplitting(25, 125, 25, 3600, 1, false);
-		
+
 		// 2 - split, no cycle
 		writeString("2 - splitting, no cycle\n");
 		runCrowdedPerformanceMetric8x8(10, 40, 3600, 1, true);
 		runCrowdedPerformanceMetric16x16(10, 80, 3600, 1, true);
-		
+
 		// 4 - split, cycle
 		writeString("4 - splitting\n");
 		runCrowdedPerformanceMetric8x8(10, 60, 3600, 2, false);
 		runCrowdedPerformanceMetric16x16(10, 160, 3600, 2, false);
 		run32x32PerformanceMetricSplitting(25, 100, 25, 3600, 2, false);
-		
+
 		// 4 - split, no cycle
 		writeString("4 - splitting, no cycle\n");
 		runCrowdedPerformanceMetric8x8(10, 40, 3600, 2, true);
 		runCrowdedPerformanceMetric16x16(10, 100, 3600, 2, true);
-		
+
 		// 8 - split, cycle
 		writeString("8 - splitting\n");
 		runCrowdedPerformanceMetric8x8(10, 60, 3600, 3, false);
 		runCrowdedPerformanceMetric16x16(10, 210, 3600, 3, false);
 		run32x32PerformanceMetricSplitting(25, 150, 25, 3600, 3, false);
-		
+
 		// 8 - split, no cycle
 		writeString("8 - splitting, no cycle\n");
 		runCrowdedPerformanceMetric8x8(10, 40, 3600, 3, true);
 		runCrowdedPerformanceMetric16x16(10, 120, 3600, 3, true);
-		
+
 		// 16 - split, cycle
 		writeString("16 - splitting\n");
 		runCrowdedPerformanceMetric8x8(20, 60, 3600, 4, false);
 		runCrowdedPerformanceMetric16x16(20, 220, 3600, 4, false);
 		run32x32PerformanceMetricSplitting(25, 250, 25, 3600, 4, false);
-		
+
 		// 16 - split, no cycle
 		writeString("16 - splitting, no cycle\n");
 		runCrowdedPerformanceMetric8x8(20, 40, 3600, 4, true);
