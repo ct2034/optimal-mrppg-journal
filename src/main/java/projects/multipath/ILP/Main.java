@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.Integer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -127,15 +128,17 @@ public class Main {
 			// solveProblemSuboptimal(p, false, true, 0, 100, 2, false);
 			break;
 		case 7:
-			System.out.println("Solving problem from file: " + argv[1] + ".\n");
+			System.out.println("# Solving problem from files (graph: " + argv[1]
+			 	+ ") jobs: " + argv[2] + ").\n");
 			Graph gr = new Graph();
 			try {
-				List<String[]> values;
-				values = new CSVReader(new FileReader(argv[1])).readAll();
-				for (String[] strings : values) {
+				// System.out.println("Adjacency List ...");
+				List<String[]> adjacency;
+				adjacency = new CSVReader(new FileReader(argv[1])).readAll();
+				for (String[] strings : adjacency) {
 					for (String s : strings)
 						if (!s.startsWith("#")) {
-							System.out.println(s);
+							// System.out.println(s);
 							Scanner sc = new Scanner(s);
 							int node = sc.nextInt();
 							List<Integer> neighbors = new ArrayList<Integer>();
@@ -147,6 +150,30 @@ public class Main {
 							gr.addVertex(node, neighbors_arr);
 						}
 				}
+
+				gr.finishBuildingGraph();
+				p = new Problem();
+				p.graph = gr;
+
+				// System.out.println("Jobs ...");
+				List<String[]> jobs;
+				jobs = new CSVReader(new FileReader(argv[2])).readAll();
+				ArrayList<Integer> starts = new ArrayList<>();
+				ArrayList<Integer> goals = new ArrayList<>();
+				for (String[] strings : jobs) {
+					for (String s : strings)
+						if (!s.startsWith("#")) {
+							// System.out.println(s);
+							Scanner sc = new Scanner(s);
+							int start = sc.nextInt();
+							starts.add(start);
+							int goal = sc.nextInt();
+							goals.add(goal);
+						}
+				}
+				p.sg = new int[][]{
+					starts.stream().mapToInt(Integer::intValue).toArray(),
+					goals.stream().mapToInt(Integer::intValue).toArray()};
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -154,11 +181,6 @@ public class Main {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
-			gr.finishBuildingGraph();
-			p = new Problem();
-			p.graph = gr;
-			p.sg = new int[][]{{0, 4}, {3, 0}, {1, 2}};
 			solveProblem(p, true, -1);
 			break;
 		}
