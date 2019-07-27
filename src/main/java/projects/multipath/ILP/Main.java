@@ -181,7 +181,7 @@ public class Main {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			solveProblemSuboptimal(p, false, true, 0, Double.parseDouble(argv[3]), 2, false);
+			solveProblemSuboptimal(p, false, true, 0, Double.parseDouble(argv[3]), 4, false);
 			break;
 		}
 	}

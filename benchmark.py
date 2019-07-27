@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 import csv
 from itertools import dropwhile
+from matplotlib import pyplot as plt
 import os
 import random
 import subprocess
 import time
 
 GRAPH_FNAME = "graph.csv"
+GRAPH_UNDIR_FNAME = "graph_undir.csv"
 JOBS_FNAME = "tmp_jobs.csv"
-TIME_LIMIT = 120
+TIME_LIMIT = 6000
 
 
 def max_vertex():
@@ -38,7 +40,7 @@ def get_unique(path):
     return unique, len(unique)
 
 
-def plan_with_n_jobs(n_jobs, N):
+def plan_with_n_jobs(n_jobs, N, graph_fname):
     random.seed(1)
     starts = list(range(N))
     goals = list(range(N))
@@ -56,11 +58,11 @@ def plan_with_n_jobs(n_jobs, N):
             jobswriter.writerow([starts[j], goals[j]])
     start_time = time.time()
     cp = subprocess.run(
-        ["./run.sh", "7", GRAPH_FNAME, JOBS_FNAME, str(TIME_LIMIT)],
+        ["./run.sh", "7", graph_fname, JOBS_FNAME, str(TIME_LIMIT)],
         stdout=subprocess.PIPE
         )
     t = time.time() - start_time
-    print("Took " + format(t, ".1f") + "s")
+    # print("Took " + format(t, ".1f") + "s")
     # print(cp.stdout.decode('utf-8'))
     paths = filter(
         lambda l: l.startswith("Agent"),
@@ -77,12 +79,47 @@ def plan_with_n_jobs(n_jobs, N):
     cost = sum(lengths) / float(n_jobs)
     return cost, t
 
-N = max_vertex()
-ns = [1, 2, 3, 5, 10, 20, 30, 50, 100]
-# ns = range(1, 20)
-cs = []
-for n_jobs in ns:
-    cost, _ = plan_with_n_jobs(n_jobs, N)
-    cs.append(cost)
-    print("n_jobs: %d -> c: %.2f"%(n_jobs, cost))
-assert len(cs) == len(ns), "all ns should have a cost"
+
+def make_undir_graph_file(graph_fname, graph_undir_fname):
+    def update_graph_dict(d, a, b):
+        for (start, end) in [(a, b), (b, a)]:
+            if start not in d.keys():
+                d[start] = tuple()
+            d[start] = d[start] + (end,)
+        return d
+    with open(graph_fname, 'r') as grf:
+        grreader = csv.reader(grf, delimiter=' ')
+        edges = {}
+        for node in grreader:
+            if not node[0].startswith("#"):
+                for target in node[1:]:
+                    edges = update_graph_dict(
+                        d=edges,
+                        a=int(node[0]),
+                        b=int(target)
+                    )
+    with open(graph_undir_fname, 'w') as gruf:
+        grufwriter = csv.writer(gruf, delimiter=' ')
+        nodes = list(edges.keys())
+        nodes.sort()
+        for node in nodes:
+            grufwriter.writerow([node] + list(edges[node]))
+
+
+if __name__ == '__main__':
+    N = max_vertex()
+    # ns = [1, 2, 3, 5, 10, 20, 30, 50, 100]
+    # ns = range(1, 20)
+    ns = range(5, 100, 15)
+    if not os.path.exists(GRAPH_UNDIR_FNAME):
+        make_undir_graph_file(GRAPH_FNAME, GRAPH_UNDIR_FNAME)
+    for graph_fname in [GRAPH_FNAME, GRAPH_UNDIR_FNAME]:
+        cs = []
+        ts = []
+        print("graph_fname: %s" % graph_fname)
+        for n_jobs in ns:
+            cost, t = plan_with_n_jobs(n_jobs, N, graph_fname)
+            cs.append(cost)
+            ts.append(t)
+            print("n_jobs: %3d | c: % 4.2f | t: % 3.2fs" % (n_jobs, cost, t))
+        assert len(cs) == len(ns), "all ns should have a cost"
