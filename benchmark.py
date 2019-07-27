@@ -11,6 +11,7 @@ GRAPH_FNAME = "graph.csv"
 GRAPH_UNDIR_FNAME = "graph_undir.csv"
 JOBS_FNAME = "tmp_jobs.csv"
 TIME_LIMIT = 6000
+SPLIT_LEVEL = 3
 
 
 def max_vertex():
@@ -58,7 +59,12 @@ def plan_with_n_jobs(n_jobs, N, graph_fname):
             jobswriter.writerow([starts[j], goals[j]])
     start_time = time.time()
     cp = subprocess.run(
-        ["./run.sh", "7", graph_fname, JOBS_FNAME, str(TIME_LIMIT)],
+        ["./run.sh",
+         "7",
+         graph_fname,
+         JOBS_FNAME,
+         str(TIME_LIMIT),
+         str(SPLIT_LEVEL)],
         stdout=subprocess.PIPE
         )
     t = time.time() - start_time
