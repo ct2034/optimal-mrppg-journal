@@ -129,7 +129,7 @@ public class Main {
 			break;
 		case 7:
 			System.out.println("# Solving problem from files (graph: " + argv[1]
-			 	+ ") jobs: " + argv[2] + ").\n");
+			 	+ ") jobs: " + argv[2] + "). Time limit: " + argv[3] + "\n");
 			Graph gr = new Graph();
 			try {
 				// System.out.println("Adjacency List ...");
@@ -181,7 +181,7 @@ public class Main {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			solveProblem(p, true, -1);
+			solveProblemSuboptimal(p, false, true, 0, Double.parseDouble(argv[3]), 2, false);
 			break;
 		}
 	}
