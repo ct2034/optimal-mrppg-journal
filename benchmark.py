@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import os
 import random
 import subprocess
+import sys
 import time
 
 GRAPH_FNAME = "graph.csv"
@@ -112,20 +113,60 @@ def make_undir_graph_file(graph_fname, graph_undir_fname):
             grufwriter.writerow([node] + list(edges[node]))
 
 
+def write_results(results):
+    with open("results.csv", 'w') as f:
+        reswriter = csv.writer(f, delimiter=' ')
+        for res in results:
+            reswriter.writerow(res)
+
+
+def read_results():
+    out = tuple()
+    with open("results.csv", 'r') as res:
+        resreader = csv.reader(res, delimiter=' ')
+        for line in resreader:
+            out = out + (list(map(float, line)),)
+    return out
+
+
 if __name__ == '__main__':
-    N = max_vertex()
-    # ns = [1, 2, 3, 5, 10, 20, 30, 50, 100]
-    # ns = range(1, 20)
-    ns = range(5, 200, 15)
-    if not os.path.exists(GRAPH_UNDIR_FNAME):
-        make_undir_graph_file(GRAPH_FNAME, GRAPH_UNDIR_FNAME)
-    for graph_fname in [GRAPH_UNDIR_FNAME, GRAPH_FNAME]:
-        cs = []
-        ts = []
-        print("graph_fname: %s" % graph_fname)
-        for n_jobs in ns:
-            cost, t = plan_with_n_jobs(n_jobs, N, graph_fname)
-            cs.append(cost)
-            ts.append(t)
-            print("n_jobs: %3d | c: % 7.2f | t: % 7.2fs" % (n_jobs, cost, t))
-        assert len(cs) == len(ns), "all ns should have a cost"
+    if sys.argv[1] == "eval":
+        N = max_vertex()
+        # ns = [1, 2, 3, 5, 10, 20, 30, 50, 100]
+        # ns = range(1, 20)
+        ns = range(10, 200, 20)
+        if not os.path.exists(GRAPH_UNDIR_FNAME):
+            make_undir_graph_file(GRAPH_FNAME, GRAPH_UNDIR_FNAME)
+        results = (ns,)
+        for graph_fname in [GRAPH_UNDIR_FNAME, GRAPH_FNAME]:
+            cs = []
+            ts = []
+            print("graph_fname: %s" % graph_fname)
+            for n_jobs in ns:
+                cost, t = plan_with_n_jobs(n_jobs, N, graph_fname)
+                cs.append(cost)
+                ts.append(t)
+                print("n_jobs: %3d | c: % 7.2f | t: % 7.2fs" %
+                      (n_jobs, cost, t))
+            assert len(cs) == len(ns), "all ns should have a cost"
+            results = results + (cs, ts)
+        write_results(results)
+    elif sys.argv[1] == "plot":
+        (ns, cs_u, ts_u, cs_d, ts_d) = read_results()
+        x = range(len(ns))
+        plt.style.use('bmh')
+        fig, (ax_cost, ax_time) = plt.subplots(2, 1)
+        fig.tight_layout()
+        ax_cost.plot(x, cs_u, label='undirected')
+        ax_cost.plot(x, cs_d, label='directed')
+        ax_time.plot(x, ts_u, label='undirected')
+        ax_time.plot(x, ts_d, label='directed')
+        plt.setp(ax_cost, xticks=x, xticklabels=map(str, map(int, ns)),
+                 title="Cost")
+        plt.setp(ax_time, xticks=x, xticklabels=map(str, map(int, ns)),
+                 title="Computation Time")
+        ax_cost.legend()
+        ax_time.legend()
+        plt.show()
+    else:
+        assert False, "choose either eval or plot"
