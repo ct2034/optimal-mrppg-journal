@@ -11,8 +11,8 @@ import time
 GRAPH_FNAME = "graph.csv"
 GRAPH_UNDIR_FNAME = "graph_undir.csv"
 JOBS_FNAME = "tmp_jobs.csv"
-TIME_LIMIT = 600
-SPLIT_LEVEL = 4
+TIME_LIMIT = 1000
+SPLIT_LEVEL = 7
 
 
 def max_vertex():
@@ -43,7 +43,7 @@ def get_unique(path):
 
 
 def plan_with_n_jobs(n_jobs, N, graph_fname):
-    random.seed(1)
+    # random.seed(1)
     starts = list(range(N))
     goals = list(range(N))
     random.shuffle(starts)
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         N = max_vertex()
         # ns = [1, 2, 3, 5, 10, 20, 30, 50, 100]
         # ns = range(1, 20)
-        ns = range(10, 200, 20)
+        ns = range(10, 120, 10)
         if not os.path.exists(GRAPH_UNDIR_FNAME):
             make_undir_graph_file(GRAPH_FNAME, GRAPH_UNDIR_FNAME)
         results = (ns,)
