@@ -17,6 +17,7 @@ SPLIT_LEVEL = 2
 
 logging.getLogger().setLevel(logging.DEBUG)
 
+
 def max_vertex():
     max_so_far = 0
     with open(GRAPH_FNAME, "r") as f:
@@ -26,7 +27,7 @@ def max_vertex():
                 max_so_far = max(
                     max_so_far,
                     max(map(int, line))
-                    )
+                )
     return max_so_far
 
 
@@ -60,10 +61,12 @@ def plan_with_n_jobs(n_jobs, N, graph_fname):
     cost = sum(lengths) / float(n_jobs)
     return cost, t
 
-def plan(starts, goals, N, graph_fname):
+
+def plan(starts, goals, N, graph_fname, timeout=TIME_LIMIT):
+    assert len(starts) == len(goals)
     with open(TMP_JOBS_FNAME, "w") as f:
         jobswriter = csv.writer(f, delimiter=' ')
-        for j in range(n_jobs):
+        for j in range(len(starts)):
             jobswriter.writerow([starts[j], goals[j]])
     start_time = time.time()
     try:
@@ -72,9 +75,10 @@ def plan(starts, goals, N, graph_fname):
              "7",
              graph_fname,
              TMP_JOBS_FNAME,
-             str(TIME_LIMIT),
-             str(SPLIT_LEVEL)]
-            )
+             str(timeout),
+             str(SPLIT_LEVEL)],
+            cwd=os.path.dirname(__file__)
+        )
     except subprocess.CalledProcessError as e:
         logging.warn("CalledProcessError")
         logging.warn(e.output)
