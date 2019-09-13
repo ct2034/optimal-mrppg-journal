@@ -50,6 +50,19 @@ def plan_with_n_jobs(n_jobs, N, graph_fname):
     random.shuffle(goals)
     starts = starts[:n_jobs]
     goals = goals[:n_jobs]
+    paths, t = plan(starts, goals, N, graph_fname)
+
+    lengths = []
+    for path in paths:
+        path = list(map(
+            lambda s: list(map(int, s.split(':'))),
+            path.split(' ')[2:]))
+        path, path_length = get_unique(path)
+        lengths.append(path_length)
+    cost = sum(lengths) / float(n_jobs)
+    return cost, t
+
+def plan(starts, goals, N, graph_fname):
     try:
         os.remove(JOBS_FNAME)
     except FileNotFoundError:
@@ -75,16 +88,7 @@ def plan_with_n_jobs(n_jobs, N, graph_fname):
         lambda l: l.startswith("Agent"),
         cp.stdout.decode('utf-8').split('\n'))
     os.remove(JOBS_FNAME)
-
-    lengths = []
-    for path in paths:
-        path = list(map(
-            lambda s: list(map(int, s.split(':'))),
-            path.split(' ')[2:]))
-        path, path_length = get_unique(path)
-        lengths.append(path_length)
-    cost = sum(lengths) / float(n_jobs)
-    return cost, t
+    return paths, t
 
 
 def make_undir_graph_file(graph_fname, graph_undir_fname):

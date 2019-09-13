@@ -134,6 +134,7 @@ public class Main {
 				+ "splitLevel: " + argv[4]
 				+ "\n");
 			Graph gr = new Graph();
+			boolean optimal = true;  // Boolean.parseBoolean(argv[5]);
 			try {
 				// System.out.println("Adjacency List ...");
 				List<String[]> adjacency;
@@ -184,7 +185,11 @@ public class Main {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			solveProblemSuboptimal(p, false, true, 0, Double.parseDouble(argv[3]), Integer.parseInt(argv[4]), false);
+			if (optimal) {
+				solveProblem(p, false, Double.parseDouble(argv[3]));
+			} else {
+				solveProblemSuboptimal(p, false, true, 0, Double.parseDouble(argv[3]), Integer.parseInt(argv[4]), false);
+			}
 			break;
 		}
 	}
