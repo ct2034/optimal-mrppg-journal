@@ -1,8 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 import csv
 from itertools import dropwhile
 from matplotlib import pyplot as plt
 import os
+import logging
 import random
 import subprocess
 import sys
@@ -10,10 +11,11 @@ import time
 
 GRAPH_FNAME = "graph.csv"
 GRAPH_UNDIR_FNAME = "graph_undir.csv"
-JOBS_FNAME = "tmp_jobs.csv"
+TMP_JOBS_FNAME = "tmp_jobs.csv"
 TIME_LIMIT = 60
 SPLIT_LEVEL = 2
 
+logging.getLogger().setLevel(logging.DEBUG)
 
 def max_vertex():
     max_so_far = 0
@@ -39,7 +41,7 @@ def get_unique(path):
     unique = (list(reversed(unique_reversed))
               + [[len(unique_reversed), last_vertex]])
     assert len(unique) <= list_length
-    return unique, len(unique)
+    return unique
 
 
 def plan_with_n_jobs(n_jobs, N, graph_fname):
@@ -54,40 +56,49 @@ def plan_with_n_jobs(n_jobs, N, graph_fname):
 
     lengths = []
     for path in paths:
-        path = list(map(
-            lambda s: list(map(int, s.split(':'))),
-            path.split(' ')[2:]))
-        path, path_length = get_unique(path)
-        lengths.append(path_length)
+        lengths.append(len(path))
     cost = sum(lengths) / float(n_jobs)
     return cost, t
 
 def plan(starts, goals, N, graph_fname):
-    try:
-        os.remove(JOBS_FNAME)
-    except FileNotFoundError:
-        pass
-    with open(JOBS_FNAME, "w") as f:
+    with open(TMP_JOBS_FNAME, "w") as f:
         jobswriter = csv.writer(f, delimiter=' ')
         for j in range(n_jobs):
             jobswriter.writerow([starts[j], goals[j]])
     start_time = time.time()
-    cp = subprocess.run(
-        ["./run.sh",
-         "7",
-         graph_fname,
-         JOBS_FNAME,
-         str(TIME_LIMIT),
-         str(SPLIT_LEVEL)],
-        stdout=subprocess.PIPE
-        )
+    try:
+        outstr = subprocess.check_output(
+            [os.path.dirname(__file__) + "/run.sh",
+             "7",
+             graph_fname,
+             TMP_JOBS_FNAME,
+             str(TIME_LIMIT),
+             str(SPLIT_LEVEL)]
+            )
+    except subprocess.CalledProcessError as e:
+        logging.warn("CalledProcessError")
+        logging.warn(e.output)
+        return [], 0
     t = time.time() - start_time
-    # print("Took " + format(t, ".1f") + "s")
-    # print(cp.stdout.decode('utf-8'))
-    paths = filter(
+    try:
+        os.remove(TMP_JOBS_FNAME)
+    except OSError:
+        pass
+    paths_str = filter(
         lambda l: l.startswith("Agent"),
-        cp.stdout.decode('utf-8').split('\n'))
-    os.remove(JOBS_FNAME)
+        outstr.split('\n'))
+    try:
+        os.remove(TMP_JOBS_FNAME)
+    except OSError:
+        pass
+
+    paths = []
+    for path_str in paths_str:
+        path = list(map(
+            lambda s: list(map(int, s.split(':'))),
+            path_str.split(' ')[2:]))
+        path = get_unique(path)
+        paths.append(path)
     return paths, t
 
 
