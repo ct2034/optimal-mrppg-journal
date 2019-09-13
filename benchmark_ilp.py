@@ -11,8 +11,8 @@ import time
 GRAPH_FNAME = "graph.csv"
 GRAPH_UNDIR_FNAME = "graph_undir.csv"
 JOBS_FNAME = "tmp_jobs.csv"
-TIME_LIMIT = 1000
-SPLIT_LEVEL = 7
+TIME_LIMIT = 60
+SPLIT_LEVEL = 2
 
 
 def max_vertex():
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         N = max_vertex()
         # ns = [1, 2, 3, 5, 10, 20, 30, 50, 100]
         # ns = range(1, 20)
-        ns = range(10, 120, 10)
+        ns = range(25, 150, 25)
         if not os.path.exists(GRAPH_UNDIR_FNAME):
             make_undir_graph_file(GRAPH_FNAME, GRAPH_UNDIR_FNAME)
         results = (ns,)
