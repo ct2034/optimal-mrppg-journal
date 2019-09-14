@@ -11,8 +11,8 @@ import time
 
 GRAPH_FNAME = "graph.csv"
 GRAPH_UNDIR_FNAME = "graph_undir.csv"
-TMP_JOBS_FNAME = "tmp_jobs.csv"
-TIME_LIMIT = 60
+TMP_JOBS_FNAME = "/tmp/tmp_jobs.csv"
+TIME_LIMIT = 35
 SPLIT_LEVEL = 2
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -69,33 +69,45 @@ def plan(starts, goals, N, graph_fname, timeout=TIME_LIMIT):
         for j in range(len(starts)):
             jobswriter.writerow([starts[j], goals[j]])
     start_time = time.time()
+    t = 0
+    outstr = ""
+    cmd = [os.path.dirname(__file__) + "/run.sh",
+           "7",
+           graph_fname,
+           TMP_JOBS_FNAME,
+           str(timeout),
+           str(SPLIT_LEVEL)]
+    logging.debug(" ".join(cmd))
     try:
-        outstr = subprocess.check_output(
-            [os.path.dirname(__file__) + "/run.sh",
-             "7",
-             graph_fname,
-             TMP_JOBS_FNAME,
-             str(timeout),
-             str(SPLIT_LEVEL)],
-            cwd=os.path.dirname(__file__)
+        process = subprocess.Popen(
+            cmd,
+            cwd=os.path.dirname(__file__),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
+        while t < timeout:
+            t = time.time() - start_time
+            if process.poll() is not None:
+                logging.debug("process.returncode " + str(process.returncode))
+                stdoutdata, stderrdata = process.communicate()
+                if stderrdata:
+                    logging.error(stderrdata)
+                outstr = stdoutdata
+                break
+            time.sleep(.1)
     except subprocess.CalledProcessError as e:
         logging.warn("CalledProcessError")
         logging.warn(e.output)
-        return [], 0
-    t = time.time() - start_time
-    try:
-        os.remove(TMP_JOBS_FNAME)
-    except OSError:
-        pass
-    paths_str = filter(
-        lambda l: l.startswith("Agent"),
-        outstr.split('\n'))
-    try:
-        os.remove(TMP_JOBS_FNAME)
-    except OSError:
-        pass
-
+    finally:
+        if process.poll() is None:
+            process.kill()
+        try:
+            os.remove(TMP_JOBS_FNAME)
+        except OSError:
+            pass
+        paths_str = filter(
+            lambda l: l.startswith("Agent"),
+            outstr.split('\n'))
     paths = []
     for path_str in paths_str:
         path = list(map(
