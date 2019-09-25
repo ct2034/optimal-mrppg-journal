@@ -15,7 +15,9 @@ TMP_JOBS_FNAME = "/tmp/tmp_jobs.csv"
 TIME_LIMIT = 35
 SPLIT_LEVEL = 2
 
-logging.getLogger().setLevel(logging.DEBUG)
+logging.basicConfig()
+logger = logging.getLogger('benchmark_ilp')
+logger.setLevel(logging.DEBUG)
 
 
 def max_vertex():
